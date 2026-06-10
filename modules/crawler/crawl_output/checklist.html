@@ -116,6 +116,11 @@
     position: sticky;
     top: 120px;
     z-index: 101;
+    justify-content: flex-start; /* Ensure alignment starts left */
+  }
+
+  .push-end {
+    margin-left: auto;
   }
 
   .btn {
@@ -461,16 +466,12 @@
 </header>
 
 <div class="toolbar">
-  <button class="btn" onclick="expandAll()">⊞ Expand All</button>
-  <button class="btn" onclick="collapseAll()">⊟ Collapse All</button>
-  <div class="separator"></div>
   <button class="btn active" id="filterAllBtn" onclick="setFilter('all')">👁 Show All</button>
   <button class="btn" id="filterActiveBtn" onclick="setFilter('hide-ignored')">🚫 Hide 0 Ignored</button>
   <div class="separator"></div>
   <button class="btn" onclick="exportJSON()">↓ Export Progress</button>
   <button class="btn" onclick="importJSON()">↑ Import Progress</button>
-  <div class="separator"></div>
-  <button class="btn btn-danger-hover" onclick="resetBrowserData()">⚠️ Clear Browser Data</button>
+  <button class="btn btn-danger-hover push-end" onclick="resetBrowserData()">⚠️ Clear Browser Data</button>
 </div>
 
 <main>
@@ -34082,22 +34083,6 @@ function toggleChildren(btn) {
   if (!children) return;
   const collapsed = btn.classList.toggle('collapsed');
   children.style.display = collapsed ? 'none' : '';
-}
-
-function expandAll() {
-  document.querySelectorAll('.toggle').forEach(b => {
-    b.classList.remove('collapsed');
-    const c = b.closest('.page-node').querySelector('.children');
-    if (c) c.style.display = '';
-  });
-}
-
-function collapseAll() {
-  document.querySelectorAll('.toggle').forEach(b => {
-    b.classList.add('collapsed');
-    const c = b.closest('.page-node').querySelector('.children');
-    if (c) c.style.display = 'none';
-  });
 }
 
 function openModal(src) { document.getElementById('modalImg').src = src; document.getElementById('modal').classList.add('open'); }
