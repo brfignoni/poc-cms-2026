@@ -1,0 +1,19 @@
+{
+  "name": "poc-cms-2026",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,mjs,cjs,jsx,tsx,astro}": "prettier --write",
+    "*.{css,scss,json,md}": "prettier --write"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^16.0.0",
+    "prettier": "^3.0.0"
+  }
+}
