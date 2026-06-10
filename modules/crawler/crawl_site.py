@@ -111,7 +111,7 @@ class SiteCrawler:
                 # Hardcoded ultra-lightweight JPEG output configuration
                 safe_name = re.sub(r'[^\w]', '_', urlparse(url).path.strip("/") or "home") + ".jpeg"
                 shot_path = SCREENSHOTS_DIR / safe_name
-                await page.screenshot(path=str(shot_path), clip=SCREENSHOT_CLIP, type="jpeg", quality=30)
+                await page.screenshot(path=str(shot_path), clip=SCREENSHOT_CLIP, type="jpeg", quality=20)
 
                 self.visited[url]["title"] = title
                 self.visited[url]["screenshot"] = str(shot_path.relative_to(OUTPUT_DIR))
@@ -702,15 +702,11 @@ def generate_report(tree: dict, base_url: str, total: int, progress_state: dict 
 </header>
 
 <div class="toolbar">
-  <button class="btn" onclick="expandAll()">⊞ Expand All</button>
-  <button class="btn" onclick="collapseAll()">⊟ Collapse All</button>
-  <div class="separator"></div>
   <button class="btn active" id="filterAllBtn" onclick="setFilter('all')">👁 Show All</button>
   <button class="btn" id="filterActiveBtn" onclick="setFilter('hide-ignored')">🚫 Hide 0 Ignored</button>
   <div class="separator"></div>
   <button class="btn" onclick="exportJSON()">↓ Export Progress</button>
   <button class="btn" onclick="importJSON()">↑ Import Progress</button>
-  <div class="separator"></div>
   <button class="btn btn-danger-hover" onclick="resetBrowserData()">⚠️ Clear Browser Data</button>
 </div>
 
@@ -861,22 +857,6 @@ function toggleChildren(btn) {{
   if (!children) return;
   const collapsed = btn.classList.toggle('collapsed');
   children.style.display = collapsed ? 'none' : '';
-}}
-
-function expandAll() {{
-  document.querySelectorAll('.toggle').forEach(b => {{
-    b.classList.remove('collapsed');
-    const c = b.closest('.page-node').querySelector('.children');
-    if (c) c.style.display = '';
-  }});
-}}
-
-function collapseAll() {{
-  document.querySelectorAll('.toggle').forEach(b => {{
-    b.classList.add('collapsed');
-    const c = b.closest('.page-node').querySelector('.children');
-    if (c) c.style.display = 'none';
-  }});
 }}
 
 function openModal(src) {{ document.getElementById('modalImg').src = src; document.getElementById('modal').classList.add('open'); }}
