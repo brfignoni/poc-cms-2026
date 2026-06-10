@@ -1,0 +1,20 @@
+# Linked to .cursor/rules/git-commits.mdc and commitlint.config.mjs
+# If those files are updated, update this file to match.
+
+When generating a git commit message, always follow this exact format:
+
+  type(scope): short description
+
+Types: feat, fix, chore, docs, refactor, style, test, perf, ci, build, hotfix, revert
+Scopes: web, cms, crawler, deps, ci, docs
+
+Rules:
+- Scope is REQUIRED — never omit it
+- Description must be lowercase
+- No period at the end
+- Under 100 characters total
+
+Examples:
+  feat(web): add hero section
+  fix(cms): resolve slug query
+  chore(deps): upgrade astro
