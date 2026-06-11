@@ -28,7 +28,7 @@ jobs:
         run: cp modules/crawler/crawl_output/checklist.html modules/crawler/crawl_output/index.html
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
