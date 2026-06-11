@@ -22,7 +22,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Copy checklist.html as index.html
         run: cp modules/crawler/crawl_output/checklist.html modules/crawler/crawl_output/index.html
