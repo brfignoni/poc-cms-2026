@@ -21,6 +21,11 @@ Monorepo — Strapi CMS, Astro web components, and a legacy site crawler.
 - [Git conventions](#git-conventions)
   - [Branch names](#branch-names)
   - [Commit messages](#commit-messages)
+- [Docker](#docker)
+  - [Commands](#commands)
+- [Strapi MCP Documentation](#strapi-mcp-documentation)
+  - [Why use the Strapi MCP](#why-use-the-strapi-mcp)
+  - [How to connect](#how-to-connect)
 
 ---
 
@@ -190,3 +195,68 @@ The description must:
 ✗ Added hero section        → no type or scope
 ✗ Feat(Web): Hero Section.  → uppercase + period
 ```
+
+---
+
+## Docker
+
+The CMS module runs inside Docker containers (Strapi + PostgreSQL). All Docker files live in `modules/cms/`. For a detailed explanation of how Docker works in this project, see [docs/strapi.md](docs/strapi.md#docker).
+
+### Commands
+
+**Prerequisite:** Docker Desktop must be running before using any of these commands.
+
+Run all commands from `modules/cms/`:
+
+```bash
+# First time or after changing Dockerfile / dependencies — build and start
+docker compose up --build
+
+# Already built, just restart — skips the build, faster
+docker compose up
+
+# Stop the containers
+docker compose down
+
+# Stop and delete the database data (fresh start)
+docker compose down -v
+
+# Production build
+docker compose -f docker-compose.prod.yml up --build
+```
+
+| Flag / Option                | What it does                                                                                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--build`                    | Rebuilds the image from the Dockerfile before starting. Use it the first time, or after changing the Dockerfile or `package.json`. Skip it for faster restarts when nothing changed. |
+| `-v` (with `down`)           | Also removes named volumes (the database data). Use this when you want a completely fresh database.                                                                                  |
+| `-f docker-compose.prod.yml` | Uses the production compose file instead of the default dev one.                                                                                                                     |
+
+---
+
+## Strapi MCP Documentation
+
+### Why use the Strapi MCP
+
+MCP (Model Context Protocol) is a way for AI assistants like Claude to connect to external knowledge sources. The Strapi MCP server gives Claude direct access to the official Strapi documentation — so instead of relying on its training data (which might be outdated), Claude can look up the latest Strapi APIs, configuration options, plugin guides, and best practices in real time.
+
+This is especially useful when working on the CMS module. Instead of switching between Claude and the Strapi docs website, you can just ask Claude your Strapi questions and it will search the official docs for you. It knows about content-type schemas, REST/GraphQL APIs, plugin development, deployment, and everything else documented on the Strapi site.
+
+### How to connect
+
+The Strapi MCP server requires a one-time authentication. Follow these steps:
+
+1. **Open Claude Code** — launch Claude Code in your terminal from this repo's directory.
+
+2. **Run the `/mcp` command** — type `/mcp` and press Enter. This opens the MCP server management screen.
+
+3. **Find the Strapi server** — you'll see a list of MCP servers. Look for the one labeled **Strapi** — it will show a status like `Not Authenticated`.
+
+4. **Start authentication** — select the Strapi server (press Enter on it). Claude Code will open a browser window or provide a URL for you to authenticate.
+
+5. **Authenticate in the browser** — follow the prompts in the browser to log in or authorize access. Once you complete the flow, the browser will confirm that authentication was successful.
+
+6. **Return to Claude Code** — go back to your terminal. You should see a message like `Authentication successful. Connected to strapi-docs.` The server status will change to connected.
+
+That's it. From now on, Claude can search the Strapi documentation automatically whenever you ask Strapi-related questions. If the connection drops or the session expires, just run `/mcp` again and re-authenticate the same way.
+
+The MCP server connection is configured in `.claude/settings.json`. This file tells Claude Code where the Strapi docs server lives (`https://strapi-docs.mcp.kapa.ai`) so it knows how to connect. You don't need to edit this file — it's already set up in the repo — but if you ever need to troubleshoot or add other MCP servers, that's where the config lives.

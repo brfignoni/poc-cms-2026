@@ -1,0 +1,50 @@
+# Production Dockerfile for Strapi CMS (multi-stage build)
+# Build context must be the monorepo root (set in docker-compose.prod.yml)
+
+# ---- Build stage ----
+FROM node:22-alpine AS build
+
+RUN apk update && apk add --no-cache build-base gcc autoconf automake zlib-dev libpng-dev bash vips-dev git > /dev/null 2>&1
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+
+# Install ALL dependencies (including devDependencies needed for admin panel build)
+WORKDIR /opt/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY modules/cms/package.json ./modules/cms/
+RUN pnpm install --frozen-lockfile --filter cms
+
+# Copy source and build
+WORKDIR /opt/modules/cms
+COPY modules/cms/ .
+
+# IMPORTANT: NODE_ENV=production must be set AFTER pnpm install, not before.
+# Setting it before would skip devDependencies needed to compile the admin panel.
+ENV NODE_ENV=production
+RUN pnpm run build
+
+# ---- Production stage ----
+FROM node:22-alpine
+
+RUN apk add --no-cache vips-dev
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+
+ENV NODE_ENV=production
+
+# Install only production dependencies
+WORKDIR /opt/
+COPY --from=build /opt/pnpm-lock.yaml /opt/pnpm-workspace.yaml /opt/package.json ./
+COPY --from=build /opt/modules/cms/package.json ./modules/cms/
+RUN pnpm install --frozen-lockfile --filter cms --prod
+
+# Copy built app from build stage
+WORKDIR /opt/modules/cms
+COPY --from=build /opt/modules/cms ./
+
+RUN chown -R node:node /opt
+USER node
+EXPOSE 1337
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:1337/_health || exit 1
+
+CMD ["pnpm", "run", "start"]

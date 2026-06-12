@@ -1,0 +1,52 @@
+# Development Docker Compose — run from modules/cms/
+# Usage: docker compose up --build
+services:
+  strapi:
+    container_name: strapi
+    build:
+      context: ../..  # monorepo root (pnpm needs the root lockfile)
+      dockerfile: modules/cms/Dockerfile
+    image: strapi:latest
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./config:/opt/modules/cms/config
+      - ./src:/opt/modules/cms/src
+      - ./package.json:/opt/modules/cms/package.json
+      - ./.env:/opt/modules/cms/.env
+      - ./public/uploads:/opt/modules/cms/public/uploads
+    ports:
+      - "1337:1337"
+    networks:
+      - strapi
+    depends_on:
+      strapiDB:
+        condition: service_healthy
+
+  strapiDB:
+    container_name: strapiDB
+    restart: unless-stopped
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - strapi-data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"  # Exposed for local debugging tools; remove if not needed
+    networks:
+      - strapi
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME} -d ${DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  strapi-data:
+
+networks:
+  strapi:
+    name: strapi
+    driver: bridge
