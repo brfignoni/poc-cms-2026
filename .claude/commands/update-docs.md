@@ -1,23 +1,28 @@
 ---
-description: Update any README.md following the project conventions — applies to the root README and all module READMEs inside modules/.
+description: Update any Markdown file (.md) following the project conventions — applies to READMEs, docs/, and any other .md file in the repo.
 allowed-tools: Read, Edit, Write, Glob, Bash(ls:*), Bash(cat:*)
 ---
 
-Update the target `README.md` following these rules. Some rules apply everywhere, others only to the root README.
+Update the target `.md` file following these rules. Some rules apply to every Markdown file, others only to specific types (READMEs, root README).
 
 ---
 
-## Rules that apply to every README (root and modules)
+## Rules that apply to every Markdown file
 
 ### Index
 
-Every README must have an index at the top that links to every section using anchor links. Keep it in sync whenever sections are added or removed.
+Every `.md` file must have an index at the top that links to every section using anchor links. Keep it in sync whenever sections are added or removed.
 
 ```md
 ## Index
 
 - [Section name](#section-name)
+  - [Subsection name](#subsection-name)
 ```
+
+---
+
+## Rules that apply to every README (root and modules)
 
 ### Dependencies table
 
