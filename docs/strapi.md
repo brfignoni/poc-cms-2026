@@ -7,8 +7,10 @@
 - [Docker](#docker)
   - [What is Docker?](#what-is-docker)
   - [Without Docker vs With Docker](#without-docker-vs-with-docker)
+  - [How Docker Connects with Strapi](#how-docker-connects-with-strapi)
   - [Configuration Decided](#configuration-decided)
   - [Scaffold Command](#scaffold-command)
+  - [Docker Files Reference](#docker-files-reference)
 - [Docker MCP Integration](#docker-mcp-integration)
 
 ## Docker
@@ -37,6 +39,39 @@ With Docker, you run `docker compose up` and everything starts automatically —
 | **Cleanup**                 | Uninstall everything manually                         | `docker compose down` removes everything       |
 
 **Why we chose Docker:** Consistent environments, zero-effort setup for the team, and easier production deployments. Strapi does not provide official Docker images — you build your own.
+
+### How Docker Connects with Strapi
+
+When you run `docker compose up`, Docker creates two containers and a private network so they can talk to each other:
+
+```
+┌──────────────────────────────────────────────────────┐
+│                Docker Network "strapi"                │
+│                                                      │
+│  ┌────────────────┐         ┌────────────────┐       │
+│  │    strapi       │         │   strapiDB     │       │
+│  │   (Node.js)     │────────▶│  (PostgreSQL)  │       │
+│  │   port 1337     │         │   port 5432    │       │
+│  └────────────────┘         └────────────────┘       │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+          │
+          ▼
+    localhost:1337 (your browser)
+```
+
+**How it works step by step:**
+
+1. Docker creates a private network called `strapi`.
+2. Docker starts the PostgreSQL container and names it `strapiDB`.
+3. Docker waits for PostgreSQL's healthcheck to pass (is the DB ready?).
+4. Docker starts the Strapi container and injects all variables from `.env`.
+5. Strapi reads `DATABASE_HOST=strapiDB` and connects to PostgreSQL **by container name** — inside Docker's network, container names work like hostnames.
+6. You open `http://localhost:1337/admin` in your browser.
+
+The key is the `.env` variable `DATABASE_HOST=strapiDB`. Inside Docker, containers find each other by name, not by IP address. That's why we use `strapiDB` (the container name) instead of `127.0.0.1` (your Mac).
+
+**Monorepo note:** The build context is set to `../..` (the repo root) because pnpm keeps a single `pnpm-lock.yaml` at the root. Docker needs access to it. The `--filter cms` flag tells pnpm to install only the CMS module's dependencies.
 
 ### Configuration Decided
 
@@ -73,10 +108,37 @@ pnpm create strapi modules/cms --skip-cloud --no-git-init --dbclient postgres --
 | `--no-example`               | Clean start without example content types.                                             |
 | `--install`                  | Install dependencies right away, skip the prompt.                                      |
 
+### Docker Files Reference
+
+All Docker files live in `modules/cms/`:
+
+| File                      | What it does                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `.dockerignore`           | Tells Docker what NOT to copy into the image (`node_modules`, `.env`, etc.)            |
+| `Dockerfile`              | Dev image — installs deps, runs `pnpm run develop` with hot-reload                     |
+| `Dockerfile.prod`         | Prod image — two-stage build: first builds everything, second keeps only what's needed |
+| `docker-compose.yml`      | Dev orchestrator — starts Strapi + PostgreSQL with volume mounts for live editing      |
+| `docker-compose.prod.yml` | Prod orchestrator — same but optimized (no volume mounts, port only on localhost)      |
+| `.env.example`            | Template with all required environment variables                                       |
+
+**Usage from `modules/cms/`:**
+
+```bash
+# Development (hot-reload)
+docker compose up --build
+
+# Production
+docker compose -f docker-compose.prod.yml up --build
+
+# Stop and remove containers
+docker compose down
+
+# Stop and also delete the database data
+docker compose down -v
+```
+
 ## Docker MCP Integration
 
-We added the Docker Hub MCP server to Claude Code so it can search Docker Hub and retrieve image metadata (tags, versions) in real time. This helps generate accurate `docker-compose.yaml` files without manual tag lookups.
+> **Note:** This was only needed during the initial setup. Now that the Docker files are in place, this MCP server is no longer relevant for day-to-day work.
 
-**Setup:** Added via CLI with `claude mcp add MCP_DOCKER -s user -- docker mcp gateway run`. Requires Docker Desktop 4.48+.
-
-**Note:** Public images work without credentials. For private repos, add a Docker Hub username and read-only personal access token in Docker Desktop → MCP Toolkit → Configuration.
+We connected Claude Code to Docker Hub via MCP so it could look up the correct image names and tags (`node:22-alpine`, `postgres:16-alpine`) when generating the Docker configuration.

@@ -21,6 +21,8 @@ Monorepo — Strapi CMS, Astro web components, and a legacy site crawler.
 - [Git conventions](#git-conventions)
   - [Branch names](#branch-names)
   - [Commit messages](#commit-messages)
+- [Docker](#docker)
+  - [Commands](#commands)
 - [Strapi MCP Documentation](#strapi-mcp-documentation)
   - [Why use the Strapi MCP](#why-use-the-strapi-mcp)
   - [How to connect](#how-to-connect)
@@ -193,6 +195,41 @@ The description must:
 ✗ Added hero section        → no type or scope
 ✗ Feat(Web): Hero Section.  → uppercase + period
 ```
+
+---
+
+## Docker
+
+The CMS module runs inside Docker containers (Strapi + PostgreSQL). All Docker files live in `modules/cms/`. For a detailed explanation of how Docker works in this project, see [docs/strapi.md](docs/strapi.md#docker).
+
+### Commands
+
+**Prerequisite:** Docker Desktop must be running before using any of these commands.
+
+Run all commands from `modules/cms/`:
+
+```bash
+# First time or after changing Dockerfile / dependencies — build and start
+docker compose up --build
+
+# Already built, just restart — skips the build, faster
+docker compose up
+
+# Stop the containers
+docker compose down
+
+# Stop and delete the database data (fresh start)
+docker compose down -v
+
+# Production build
+docker compose -f docker-compose.prod.yml up --build
+```
+
+| Flag / Option                | What it does                                                                                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--build`                    | Rebuilds the image from the Dockerfile before starting. Use it the first time, or after changing the Dockerfile or `package.json`. Skip it for faster restarts when nothing changed. |
+| `-v` (with `down`)           | Also removes named volumes (the database data). Use this when you want a completely fresh database.                                                                                  |
+| `-f docker-compose.prod.yml` | Uses the production compose file instead of the default dev one.                                                                                                                     |
 
 ---
 
